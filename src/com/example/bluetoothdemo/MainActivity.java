@@ -1,5 +1,6 @@
 package com.example.bluetoothdemo;
 
+import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -19,6 +20,7 @@ import android.widget.ListView;
 
 import com.example.adapter.DeviceListAdapter;
 import com.example.base.BaseActivity;
+import com.example.service.BluetoothService;
 
 public class MainActivity extends BaseActivity {
 	
@@ -48,13 +50,30 @@ public class MainActivity extends BaseActivity {
 		deviceAdapter = new DeviceListAdapter(this);
 		lv.setAdapter(deviceAdapter);
 		lv.setOnItemClickListener(new OnItemClickListener() {
-
+			
 			@Override
 			public void onItemClick(AdapterView<?> parent, View view,
 					int position, long id) {
-				
+				BluetoothDevice device = (BluetoothDevice) parent.getAdapter().getItem(position);
+				boundDevice(device);;
 			}
 		});
+	}
+	
+	private void boundDevice(BluetoothDevice device){
+		int state = device.getBondState();
+		if(state == BluetoothDevice.BOND_BONDED){//已绑定
+			Log.d(TAG, "-------->");
+			BluetoothService.getInstance().connet(device);
+		}else{//未绑定，先绑定
+			try {
+				Method createBondMethod = BluetoothDevice.class.getMethod("createBond");
+				createBondMethod.invoke(device);
+			} catch (Exception e) {
+				e.printStackTrace();
+			}
+		}
+		Log.d(TAG, "-------->"+state);
 	}
 	
 	/**
@@ -104,6 +123,8 @@ public class MainActivity extends BaseActivity {
 				deviceAdapter.setData(deviceList);
 				deviceAdapter.notifyDataSetChanged();
 				Log.d(TAG, "--deviceName-->"+device);
+			}else if(BluetoothAdapter.ACTION_STATE_CHANGED.equals(action)){
+				toastShort("蓝牙状态改变");;
 			}
 		}
 	};
