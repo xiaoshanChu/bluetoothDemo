@@ -1,45 +1,82 @@
 package com.example.service;
 
-import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
 import java.util.UUID;
 
 import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothSocket;
 import android.os.Build;
-import android.util.Log;
+import android.os.Handler;
+
+import com.example.util.LogUtil;
 
 /**
  * @author Xiaoshan
- * 		蓝牙连接
+ * 		蓝牙的连接、断开、和连接状态
  *
  */
 public class BluetoothService {
 	
-	private ConnectThread connectThread;
+	public static final int STATE_CONNECTED = 0;//蓝牙连接状态已连接
+	public static final int STATE_CONNECTING = 1; //连接中
+	public static final int STATE_DISCONNECT = 2;//状态断开连接
+	public static final int STATE_CONNECT_FAILURE = 3;//连接失败
 	
+	private int state;
+	private static String TAG = "BluetoothService";
 	private static BluetoothService instance;
+	private InputStream inputStream;//蓝牙输入输出流对象
+	private OutputStream outputStream;
+	private ConnectThread connectThread;
+	private Handler handler;
+	
+	public void setHandler(Handler handler){
+		this.handler = handler;
+	}
+	
+	public InputStream getInputStream(){
+		return inputStream;
+	}
+	
+	public OutputStream getOutputStream(){
+		return outputStream;
+	}
+	
+	private synchronized void setState(int state){
+		this.state = state;
+	}
+	
+	public int getState(){
+		return state;
+	}
 	
 	public static synchronized BluetoothService getInstance(){
 		if(instance == null){
 			instance = new BluetoothService();
 		}
-		Log.d("BluetoothService", "------BluetoothService");
 		return instance;
 	}
 	
 	public void connet(BluetoothDevice device){
-		if(connectThread != null){
-			if(connectThread.isInterrupted()){
-				connectThread.interrupt();
-			}
-		}
-		connectThread = null;
+		close();
 		connectThread = new ConnectThread(device);
-		Log.d("BluetoothService", "------connet");
 		connectThread.start();
-		
 	}
 	
+	public void close(){
+		if(connectThread != null){
+			if(!connectThread.isInterrupted()){
+				connectThread.close();
+				connectThread.interrupt();
+			}
+			connectThread = null;
+		}
+	}
+	
+	/**
+	 * 蓝牙连接线程
+	 */
 	private class ConnectThread extends Thread {
 		
 		private BluetoothDevice device;
@@ -51,7 +88,7 @@ public class BluetoothService {
 		
 		@Override
 		public void run() {
-			Log.d("BluetoothService", "------run");
+			setStateAndMsg(STATE_CONNECTING);
 			try {
 				if(Build.VERSION.SDK_INT >= 10){
 					socket = device.createInsecureRfcommSocketToServiceRecord(
@@ -61,12 +98,37 @@ public class BluetoothService {
 							UUID.fromString("00001101-0000-1000-8000-00805F9B34FB"));
 				}
 				socket.connect();
-				Log.d("BluetoothService", "------connected");
-			} catch (IOException e) {
+				inputStream = socket.getInputStream();
+				outputStream = socket.getOutputStream();
+				if(inputStream != null && outputStream != null){
+					setStateAndMsg(STATE_CONNECTED);
+				}else{
+					setStateAndMsg(STATE_CONNECT_FAILURE);
+				}
+			} catch (Exception e) {
 				e.printStackTrace();
+				LogUtil.d(TAG, "Exception---->"+e);
+				setStateAndMsg(STATE_CONNECT_FAILURE);
 			}
 		}
 		
+		private void setStateAndMsg(int state){
+			setState(state);
+			handler.obtainMessage(state).sendToTarget();
+		}
+		
+		public synchronized void close(){
+			if(socket != null){
+				try {
+					socket.close();
+					socket = null;
+					setStateAndMsg(STATE_DISCONNECT);
+					LogUtil.d(TAG, "closed");
+				} catch (Exception e) {
+					e.printStackTrace();
+				}
+			}
+		}
 	}
 	
 }

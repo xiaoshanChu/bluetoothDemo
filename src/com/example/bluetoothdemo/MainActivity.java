@@ -12,19 +12,24 @@ import android.content.Intent;
 import android.content.IntentFilter;
 import android.os.Bundle;
 import android.os.CountDownTimer;
+import android.os.Handler;
+import android.os.Message;
 import android.util.Log;
 import android.view.View;
+import android.view.View.OnClickListener;
 import android.widget.AdapterView;
 import android.widget.AdapterView.OnItemClickListener;
+import android.widget.Button;
 import android.widget.ListView;
 
 import com.example.adapter.DeviceListAdapter;
 import com.example.base.BaseActivity;
 import com.example.service.BluetoothService;
 
-public class MainActivity extends BaseActivity {
+public class MainActivity extends BaseActivity implements OnClickListener {
 	
 	private ListView lv;
+	private Button btnDisconnect;
 	/**
 	 * 蓝牙适配器对象
 	 */
@@ -32,6 +37,26 @@ public class MainActivity extends BaseActivity {
 	private final String TAG = "MainActivity";
 	private DeviceListAdapter deviceAdapter;
 	private List<BluetoothDevice> deviceList;
+	
+	private Handler handler = new Handler(){
+
+		@Override
+		public void handleMessage(Message msg) {
+			switch(msg.what){
+			case BluetoothService.STATE_CONNECTED:
+				toastLong("设备已连接");
+				break;
+			case BluetoothService.STATE_DISCONNECT:
+				toastShort("设备已断开");
+				break;
+			case BluetoothService.STATE_CONNECT_FAILURE:
+				toastShort("设备连接失败");
+				default:
+					break;
+			}
+		}
+		
+	};
 
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
@@ -47,6 +72,8 @@ public class MainActivity extends BaseActivity {
 		bluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
 		deviceList = new ArrayList<BluetoothDevice>();
 		lv = (ListView) findViewById(R.id.lv_device_list);
+		btnDisconnect = (Button) findViewById(R.id.btn_disconnect);
+		btnDisconnect.setOnClickListener(this);
 		deviceAdapter = new DeviceListAdapter(this);
 		lv.setAdapter(deviceAdapter);
 		lv.setOnItemClickListener(new OnItemClickListener() {
@@ -64,7 +91,9 @@ public class MainActivity extends BaseActivity {
 		int state = device.getBondState();
 		if(state == BluetoothDevice.BOND_BONDED){//已绑定
 			Log.d(TAG, "-------->");
-			BluetoothService.getInstance().connet(device);
+			btService = BluetoothService.getInstance();
+			btService.setHandler(handler);
+			btService.connet(device);
 		}else{//未绑定，先绑定
 			try {
 				Method createBondMethod = BluetoothDevice.class.getMethod("createBond");
@@ -104,6 +133,7 @@ public class MainActivity extends BaseActivity {
 	protected void onDestroy() {
 		super.onDestroy();
 		bluetoothAdapter.cancelDiscovery();
+		if(receiver.isOrderedBroadcast()){}
 		unregisterReceiver(receiver);
 	}
 	
@@ -128,6 +158,7 @@ public class MainActivity extends BaseActivity {
 			}
 		}
 	};
+	private BluetoothService btService;
 	
 	/**
 	 * 计时15秒后取消搜索
@@ -145,6 +176,17 @@ public class MainActivity extends BaseActivity {
 			bluetoothAdapter.cancelDiscovery();
 			timeCount.cancel();
 			Log.d(TAG, "exe");
+		}
+	}
+
+	@Override
+	public void onClick(View v) {
+		switch(v.getId()){
+		case R.id.btn_disconnect:
+			BluetoothService.getInstance().close();
+			break;
+			default:
+				break;
 		}
 	}
 }
