@@ -18,10 +18,10 @@ import com.example.util.LogUtil;
  */
 public class BluetoothService {
 	
-	public static final int STATE_CONNECTED = 0;//蓝牙连接状态已连接
-	public static final int STATE_CONNECTING = 1; //连接中
-	public static final int STATE_DISCONNECT = 2;//状态断开连接
-	public static final int STATE_CONNECT_FAILURE = 3;//连接失败
+	public static final int STATE_CONNECTED = 10000;//蓝牙连接状态已连接
+	public static final int STATE_CONNECTING = 10001; //连接中
+	public static final int STATE_DISCONNECT = 10002;//状态断开连接
+	public static final int STATE_CONNECT_FAILURE = 10003;//连接失败
 	
 	private int state;
 	private static String TAG = "BluetoothService";
