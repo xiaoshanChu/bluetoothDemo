@@ -9,8 +9,6 @@ import android.bluetooth.BluetoothSocket;
 import android.os.Build;
 import android.os.Handler;
 
-import com.example.util.LogUtil;
-
 /**
  * @author Xiaoshan
  * 		蓝牙的连接、断开、和连接状态
@@ -100,6 +98,7 @@ public class BluetoothService {
 				socket.connect();
 				inputStream = socket.getInputStream();
 				outputStream = socket.getOutputStream();
+				
 				if(inputStream != null && outputStream != null){
 					setStateAndMsg(STATE_CONNECTED);
 				}else{
@@ -107,7 +106,6 @@ public class BluetoothService {
 				}
 			} catch (Exception e) {
 				e.printStackTrace();
-				LogUtil.d(TAG, "Exception---->"+e);
 				setStateAndMsg(STATE_CONNECT_FAILURE);
 			}
 		}
@@ -123,7 +121,6 @@ public class BluetoothService {
 					socket.close();
 					socket = null;
 					setStateAndMsg(STATE_DISCONNECT);
-					LogUtil.d(TAG, "closed");
 				} catch (Exception e) {
 					e.printStackTrace();
 				}
