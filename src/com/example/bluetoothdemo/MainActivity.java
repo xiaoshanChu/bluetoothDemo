@@ -7,6 +7,7 @@ import java.util.Map;
 import java.util.Timer;
 import java.util.TimerTask;
 
+import android.app.Activity;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
 import android.content.BroadcastReceiver;
@@ -22,20 +23,18 @@ import android.widget.AdapterView;
 import android.widget.AdapterView.OnItemClickListener;
 import android.widget.Button;
 import android.widget.ListView;
+import android.widget.Toast;
 
 import com.ehking.kpos.Interfac.CalculationMACListener;
 import com.ehking.kpos.Interfac.DeviceInfoListener;
 import com.ehking.kpos.Interfac.StateListener;
 import com.ehking.kpos.KposOpen;
 import com.ehking.kpos.util.LogUtil;
-import com.example.adapter.DeviceListAdapter;
-import com.example.base.BaseActivity;
-import com.example.service.BluetoothService;
 import com.nexgo.oaf.datahub.device.mpos.DeviceInfo;
 import com.nexgo.oaf.datahub.device.mpos.WorkingKeys;
 import com.nexgo.oaf.datahub.util.ByteUtils;
 
-public class MainActivity extends BaseActivity implements OnClickListener
+public class MainActivity extends Activity implements OnClickListener
 	,DeviceInfoListener,StateListener,CalculationMACListener{
 	
 	private final String TAG = "MainActivity";
@@ -141,11 +140,11 @@ public class MainActivity extends BaseActivity implements OnClickListener
 	private void searchRound(){
 		bluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
 		if(bluetoothAdapter == null){
-			toastShort("该设备不支持蓝牙");
+			Toast.makeText(this, "该设备不支持蓝牙", Toast.LENGTH_LONG);
 			return;
 		}
 		if(!bluetoothAdapter.isEnabled()){
-			toastShort("请打开蓝牙");
+			Toast.makeText(this, "请打开蓝牙", Toast.LENGTH_LONG);
 			return;
 		}
 		bluetoothAdapter.startDiscovery();
@@ -198,12 +197,11 @@ public class MainActivity extends BaseActivity implements OnClickListener
 					deviceAdapter.notifyDataSetChanged();
 				}
 			}else if(BluetoothAdapter.ACTION_STATE_CHANGED.equals(action)){
-				toastShort("蓝牙状态改变");
+				Toast.makeText(MainActivity.this, "蓝牙状态改变", Toast.LENGTH_LONG);
 			}else if(BluetoothDevice.ACTION_ACL_CONNECTED.equals(action)){
-				toastShort("设备已连接");
-				
+				Toast.makeText(MainActivity.this, "设备已连接", Toast.LENGTH_LONG);
 			}else if(BluetoothDevice.ACTION_ACL_DISCONNECTED.equals(action)){
-				toastShort("设备连接断开");
+				Toast.makeText(MainActivity.this, "设备连接断开", Toast.LENGTH_LONG);
 			}
 		}
 	};

@@ -1,4 +1,4 @@
-package com.example.adapter;
+package com.example.bluetoothdemo;
 
 import java.util.List;
 

@@ -1,4 +1,4 @@
-package com.example.service;
+package com.example.bluetoothdemo;
 
 import java.io.InputStream;
 import java.io.OutputStream;

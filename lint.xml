@@ -8,4 +8,5 @@
     <issue id="ObsoleteLayoutParam" severity="ignore" />
     <issue id="OldTargetApi" severity="ignore" />
     <issue id="RtlHardcoded" severity="ignore" />
+    <issue id="ShowToast" severity="ignore" />
 </lint>
